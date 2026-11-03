@@ -1,0 +1,307 @@
+{
+  "users": [
+    {
+      "id": "22b22368-a131-480a-9365-fb9e550573f0",
+      "userId": "alex_dev99",
+      "userIdLower": "alex_dev99",
+      "fullName": "Alex Rivera",
+      "email": "alex@university.edu",
+      "emailLower": "alex@university.edu",
+      "passwordHash": "$argon2id$v=19$m=65536,t=3,p=4$WfKiOx6ttqDJARz5V3a5ww$5BiVLHXevsdQ9O3UkzQ7zYNHll/cQNmSIJaeOnQimQE",
+      "emailVerified": false,
+      "verificationToken": "0b399186003e8ec6f3d4fd6d87438f91fb9664d18f1d716c8a301365f464ffbe",
+      "verificationExpires": "2026-11-04T07:53:31.741Z",
+      "sessions": [
+        {
+          "sessionId": "fe53a136-b272-4289-be6c-0efb5ac66fcc",
+          "tokenHash": "5081abd345357cbb40ad8142396d8e619e4b16ef11697ed323169cfc28e79d35",
+          "userAgent": "node",
+          "createdAt": "2026-11-03T07:53:51.201Z",
+          "lastActiveAt": "2026-11-03T07:53:51.201Z",
+          "expiresAt": "2026-11-10T07:53:51.201Z"
+        }
+      ],
+      "failedLoginAttempts": 0,
+      "createdAt": "2026-11-03T07:53:31.742Z",
+      "updatedAt": "2026-11-03T07:53:50.713Z",
+      "lockedUntil": null,
+      "passwordResetToken": null,
+      "passwordResetExpires": null
+    }
+  ],
+  "tasks": {
+    "22b22368-a131-480a-9365-fb9e550573f0": [
+      {
+        "id": "demo-task-1",
+        "title": "Global AI & Web3 Hackathon 🚀",
+        "category": "hackathon",
+        "deadline": "2026-11-05T21:00:00.000Z",
+        "priority": "high",
+        "notes": "Building an autonomous research assistant on decentralized storage. Team checkpoint on Discord every evening.",
+        "link": "https://devpost.com",
+        "reminderTimes": [
+          {
+            "preset": "1_day"
+          },
+          {
+            "preset": "1_hour"
+          }
+        ],
+        "repeat": "weekly",
+        "checklist": [
+          {
+            "id": "c1",
+            "text": "Confirm team members & role allocation",
+            "completed": true
+          },
+          {
+            "id": "c2",
+            "text": "Prepare architecture proposal & API keys",
+            "completed": true
+          },
+          {
+            "id": "c3",
+            "text": "Create 3-minute video presentation & slides",
+            "completed": false
+          },
+          {
+            "id": "c4",
+            "text": "Submit final project repo to Devpost",
+            "completed": false
+          }
+        ],
+        "completed": false,
+        "createdAt": "2026-10-31T07:53:31.742Z",
+        "updatedAt": "2026-11-03T07:53:31.742Z",
+        "completionHistory": []
+      },
+      {
+        "id": "demo-task-2",
+        "title": "Distributed Systems Lab Report 📝",
+        "category": "submission",
+        "deadline": "2026-11-03T11:53:31.742Z",
+        "priority": "high",
+        "notes": "Upload compiled PDF with benchmark charts comparing Raft and Paxos consensus latencies.",
+        "link": "https://classroom.google.com",
+        "reminderTimes": [
+          {
+            "preset": "1_hour"
+          }
+        ],
+        "repeat": "never",
+        "checklist": [
+          {
+            "id": "c5",
+            "text": "Benchmark cluster node failure latencies",
+            "completed": true
+          },
+          {
+            "id": "c6",
+            "text": "Draw topology diagram with Mermaid/Figma",
+            "completed": true
+          },
+          {
+            "id": "c7",
+            "text": "Export LaTeX document to IEEE PDF",
+            "completed": false
+          }
+        ],
+        "completed": false,
+        "createdAt": "2026-11-01T07:53:31.742Z",
+        "updatedAt": "2026-11-03T07:53:31.742Z"
+      },
+      {
+        "id": "demo-task-3",
+        "title": "Advanced Calculus Midterm Exam 📚",
+        "category": "exam",
+        "deadline": "2026-11-07T09:00:00.000Z",
+        "priority": "high",
+        "notes": "Room 304, Engineering Hall. Topics: Multivariable Taylor series, Stokes Theorem, Green Theorem.",
+        "reminderTimes": [
+          {
+            "preset": "1_week"
+          },
+          {
+            "preset": "1_day"
+          },
+          {
+            "preset": "1_hour"
+          }
+        ],
+        "repeat": "never",
+        "checklist": [
+          {
+            "id": "c8",
+            "text": "Solve past exam papers from 2024 and 2025",
+            "completed": true
+          },
+          {
+            "id": "c9",
+            "text": "Prepare formula cheat sheet for quick recall",
+            "completed": false
+          },
+          {
+            "id": "c10",
+            "text": "Pack approved scientific calculator & spare pens",
+            "completed": false
+          }
+        ],
+        "completed": false,
+        "createdAt": "2026-11-02T07:53:31.742Z",
+        "updatedAt": "2026-11-03T07:53:31.742Z"
+      },
+      {
+        "id": "demo-task-4",
+        "title": "Summer Research Fellowship Application 🌱",
+        "category": "personal",
+        "deadline": "2026-11-13T18:00:00.000Z",
+        "priority": "normal",
+        "notes": "Undergraduate research fellowship funding for summer term. Submit academic transcript and statement.",
+        "link": "https://university.edu/fellowship-portal",
+        "reminderTimes": [
+          {
+            "preset": "1_week"
+          },
+          {
+            "preset": "1_day"
+          }
+        ],
+        "repeat": "monthly",
+        "checklist": [
+          {
+            "id": "c11",
+            "text": "Request professor recommendation letter",
+            "completed": true
+          },
+          {
+            "id": "c12",
+            "text": "Draft 1-page Statement of Purpose",
+            "completed": false
+          },
+          {
+            "id": "c13",
+            "text": "Order official e-transcript from registrar",
+            "completed": false
+          }
+        ],
+        "completed": false,
+        "createdAt": "2026-10-29T07:53:31.742Z",
+        "updatedAt": "2026-11-03T07:53:31.742Z"
+      },
+      {
+        "id": "demo-task-5",
+        "title": "Course Fee Payment Receipt Upload 📝",
+        "category": "submission",
+        "deadline": "2026-11-03T02:53:31.742Z",
+        "priority": "normal",
+        "notes": "Upload the semester bank challan or transaction ID on the student portal.",
+        "link": "https://portal.student.ac.in",
+        "reminderTimes": [
+          {
+            "preset": "1_day"
+          }
+        ],
+        "repeat": "never",
+        "checklist": [
+          {
+            "id": "c14",
+            "text": "Download payment confirmation PDF",
+            "completed": true
+          },
+          {
+            "id": "c15",
+            "text": "Upload to portal finance section",
+            "completed": false
+          }
+        ],
+        "completed": false,
+        "createdAt": "2026-10-30T07:53:31.742Z",
+        "updatedAt": "2026-11-03T07:53:31.742Z"
+      },
+      {
+        "id": "demo-task-6",
+        "title": "Open Source Pull Request Review 🚀",
+        "category": "hackathon",
+        "deadline": "2026-11-02T14:00:00.000Z",
+        "priority": "low",
+        "notes": "Reviewed community PR for the hackathon starter template repository.",
+        "link": "https://github.com",
+        "reminderTimes": [],
+        "repeat": "weekly",
+        "checklist": [
+          {
+            "id": "c16",
+            "text": "Checkout pull request branch locally",
+            "completed": true
+          },
+          {
+            "id": "c17",
+            "text": "Run test suite and verify UI",
+            "completed": true
+          },
+          {
+            "id": "c18",
+            "text": "Leave constructive code review",
+            "completed": true
+          }
+        ],
+        "completed": true,
+        "completedAt": "2026-11-02T15:00:00.000Z",
+        "createdAt": "2026-10-28T07:53:31.742Z",
+        "updatedAt": "2026-11-03T07:53:31.742Z",
+        "completionHistory": [
+          "2026-11-02T15:00:00.000Z"
+        ]
+      }
+    ]
+  },
+  "settings": {
+    "22b22368-a131-480a-9365-fb9e550573f0": {
+      "theme": "light",
+      "timezone": "Asia/Kolkata",
+      "timeFormat": "12h",
+      "showEmojiBackground": true,
+      "soundEnabled": true,
+      "browserNotificationsEnabled": false,
+      "inAppBannerEnabled": true,
+      "defaultReminderTimings": [
+        {
+          "preset": "1_day"
+        },
+        {
+          "preset": "1_hour"
+        }
+      ],
+      "reducedMotion": false
+    }
+  },
+  "emailLogs": [
+    {
+      "id": "58b19cb8-5f75-44aa-bcfb-9243dd708d26",
+      "to": "alex@university.edu",
+      "subject": "Verify your Soonzo account email",
+      "type": "verify_email",
+      "token": "0b399186003e8ec6f3d4fd6d87438f91fb9664d18f1d716c8a301365f464ffbe",
+      "link": "/verify-email?token=0b399186003e8ec6f3d4fd6d87438f91fb9664d18f1d716c8a301365f464ffbe",
+      "sentAt": "2026-11-03T07:53:31.742Z"
+    },
+    {
+      "id": "d34e25b7-60b6-481a-857a-103a49c3aa90",
+      "to": "alex@university.edu",
+      "subject": "Reset your Soonzo account password",
+      "type": "password_reset",
+      "token": "30b00d1c187b996e745977697cd4a1310b7c681a33269fabf878e80c4827d97c",
+      "link": "/reset-password?token=30b00d1c187b996e745977697cd4a1310b7c681a33269fabf878e80c4827d97c",
+      "sentAt": "2026-11-03T07:53:32.269Z"
+    },
+    {
+      "id": "a7dbb776-7e24-4689-b3ec-525e0013a152",
+      "to": "alex@university.edu",
+      "subject": "Reset your Soonzo account password",
+      "type": "password_reset",
+      "token": "a5cdc16dddcc10edb6f470dabcad67a999e56e56c439c9e01bb6557f8a0e68d8",
+      "link": "/reset-password?token=a5cdc16dddcc10edb6f470dabcad67a999e56e56c439c9e01bb6557f8a0e68d8",
+      "sentAt": "2026-11-03T07:53:50.537Z"
+    }
+  ]
+}

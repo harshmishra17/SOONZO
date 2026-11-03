@@ -6,7 +6,10 @@ import {
   Settings,
   Plus,
   Sparkles,
+  LogOut,
+  User,
 } from 'lucide-react';
+import { UserProfile } from '../types';
 
 export type NavTab = 'dashboard' | 'upcoming' | 'completed' | 'settings';
 
@@ -17,6 +20,8 @@ interface NavigationProps {
   pendingCount: number;
   overdueCount: number;
   completedCount: number;
+  currentUser?: UserProfile | null;
+  onLogout?: () => void;
 }
 
 export const Navigation: React.FC<NavigationProps> = ({
@@ -26,6 +31,8 @@ export const Navigation: React.FC<NavigationProps> = ({
   pendingCount,
   overdueCount,
   completedCount,
+  currentUser,
+  onLogout,
 }) => {
   const navItems: { id: NavTab; label: string; icon: React.ReactNode; badge?: number; badgeColor?: string }[] = [
     {
@@ -119,15 +126,46 @@ export const Navigation: React.FC<NavigationProps> = ({
           </nav>
         </div>
 
-        {/* Motivational footer note in sidebar */}
-        <div className="p-4 rounded-2xl bg-gradient-to-br from-violet-50 to-sky-50 dark:from-slate-800/60 dark:to-slate-800/30 border border-violet-100 dark:border-slate-800">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-violet-800 dark:text-violet-300 mb-1">
-            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-            <span>Study Tip</span>
+        <div className="space-y-3">
+          {/* User Identity Card */}
+          {currentUser && (
+            <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 text-xs">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-full bg-violet-600 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                  {currentUser.fullName.charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0">
+                  <p className="font-semibold text-slate-900 dark:text-slate-100 truncate">
+                    {currentUser.fullName}
+                  </p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono truncate">
+                    @{currentUser.userId}
+                  </p>
+                </div>
+              </div>
+              {onLogout && (
+                <button
+                  onClick={onLogout}
+                  className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg hover:bg-slate-200/60 dark:hover:bg-slate-700 transition-colors shrink-0"
+                  title="Sign out"
+                  aria-label="Sign out"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Motivational footer note in sidebar */}
+          <div className="p-3.5 rounded-2xl bg-gradient-to-br from-violet-50 to-sky-50 dark:from-slate-800/60 dark:to-slate-800/30 border border-violet-100 dark:border-slate-800">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-violet-800 dark:text-violet-300 mb-1">
+              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+              <span>Study Tip</span>
+            </div>
+            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+              Break big submissions into bite-sized checklist steps to reduce deadline stress.
+            </p>
           </div>
-          <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-            Break big submissions into bite-sized checklist steps to reduce deadline stress.
-          </p>
         </div>
       </aside>
 
@@ -135,17 +173,35 @@ export const Navigation: React.FC<NavigationProps> = ({
       <header className="md:hidden sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex items-center justify-between backdrop-blur-xs">
         <div className="flex items-center gap-2.5">
           <span className="text-xl">🎯</span>
-          <span className="font-bold text-base text-slate-900 dark:text-white">
-            Soonzo
-          </span>
+          <div>
+            <span className="font-bold text-base text-slate-900 dark:text-white block leading-none">
+              Soonzo
+            </span>
+            {currentUser && (
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                @{currentUser.userId}
+              </span>
+            )}
+          </div>
         </div>
-        <button
-          onClick={onOpenAddModal}
-          className="px-3 py-1.5 bg-violet-600 text-white rounded-xl text-xs font-semibold flex items-center gap-1 shadow-xs hover:bg-violet-700"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          <span>Add</span>
-        </button>
+        <div className="flex items-center gap-2">
+          {currentUser && onLogout && (
+            <button
+              onClick={onLogout}
+              className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg text-xs"
+              title="Sign out"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          )}
+          <button
+            onClick={onOpenAddModal}
+            className="px-3 py-1.5 bg-violet-600 text-white rounded-xl text-xs font-semibold flex items-center gap-1 shadow-xs hover:bg-violet-700"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add</span>
+          </button>
+        </div>
       </header>
 
       {/* Mobile Bottom Navigation Bar */}

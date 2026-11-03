@@ -58,3 +58,21 @@ export interface NotificationAlert {
   timestamp: string;
   isOverdue: boolean;
 }
+
+export interface UserProfile {
+  id: string; // Immutable internal UUID
+  userId: string; // Public User ID (4-24 chars)
+  fullName: string;
+  email: string;
+  emailVerified: boolean;
+  createdAt: string;
+}
+
+export type AuthScreen =
+  | 'login'
+  | 'register'
+  | 'forgot_password'
+  | 'reset_password'
+  | 'verify_email'
+  | 'forgot_userid';
+

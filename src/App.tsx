@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   TaskReminder,
   UserSettings,
+  UserProfile,
 } from './types';
 import {
   loadTasksFromStorage,
@@ -19,6 +20,7 @@ import { generateDemoTasks } from './utils/demoData';
 import { calculateNextOccurrence, calculateSnoozeTime } from './utils/dateUtils';
 import { fireTaskCompletionCelebration } from './utils/celebration';
 import { useReminderEngine } from './hooks/useReminderEngine';
+import { authApi, tasksApi, settingsApi } from './utils/api';
 
 import { EmojiBackground } from './components/EmojiBackground';
 import { Navigation, NavTab } from './components/Navigation';
@@ -31,9 +33,15 @@ import { TaskDetailModal } from './components/TaskDetailModal';
 import { AddEditTaskModal } from './components/AddEditTaskModal';
 import { DeleteConfirmModal } from './components/DeleteConfirmModal';
 import { InAppAlertBanner } from './components/InAppAlertBanner';
+import { AuthView } from './components/auth/AuthView';
+import { ImportOfflineTasksModal } from './components/auth/ImportOfflineTasksModal';
+import { Mail, CheckCircle2, AlertTriangle, RefreshCw } from 'lucide-react';
 
 export default function App() {
-  const [tasks, setTasks] = useState<TaskReminder[]>(() => loadTasksFromStorage());
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+  const [authChecking, setAuthChecking] = useState(true);
+
+  const [tasks, setTasks] = useState<TaskReminder[]>([]);
   const [settings, setSettings] = useState<UserSettings>(() => loadSettingsFromStorage());
   const [currentTab, setCurrentTab] = useState<NavTab>('dashboard');
 
@@ -42,6 +50,14 @@ export default function App() {
   const [editingTask, setEditingTask] = useState<TaskReminder | null>(null);
   const [detailTask, setDetailTask] = useState<TaskReminder | null>(null);
   const [taskToDelete, setTaskToDelete] = useState<TaskReminder | null>(null);
+
+  // Offline import prompt
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [offlineTasks, setOfflineTasks] = useState<TaskReminder[]>([]);
+
+  // Verification banner feedback
+  const [resendStatus, setResendStatus] = useState<string | null>(null);
+  const [resendLoading, setResendLoading] = useState(false);
 
   // Sync settings theme to HTML element
   useEffect(() => {
@@ -60,15 +76,153 @@ export default function App() {
     }
   }, [settings.theme]);
 
-  // Persist tasks on change
+  // Check existing session on boot
   useEffect(() => {
-    saveTasksToStorage(tasks);
-  }, [tasks]);
+    let isMounted = true;
 
-  // Persist settings on change
+    async function checkAuth() {
+      try {
+        const { user } = await authApi.getMe();
+        if (isMounted && user) {
+          setCurrentUser(user);
+          await loadUserRemoteData(user);
+        }
+      } catch {
+        if (isMounted) {
+          setCurrentUser(null);
+        }
+      } finally {
+        if (isMounted) {
+          setAuthChecking(false);
+        }
+      }
+    }
+
+    checkAuth();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Load user's private data from backend
+  const loadUserRemoteData = async (user: UserProfile) => {
+    try {
+      const [tasksRes, settingsRes] = await Promise.all([
+        tasksApi.getTasks(),
+        settingsApi.getSettings(),
+      ]);
+
+      if (tasksRes.tasks) {
+        setTasks(tasksRes.tasks);
+        saveTasksToStorage(tasksRes.tasks);
+      }
+      if (settingsRes.settings) {
+        setSettings(settingsRes.settings);
+        saveSettingsToStorage(settingsRes.settings);
+      }
+
+      // Check for offline tasks to ask user if they want to import
+      const local = loadTasksFromStorage();
+      if (local && local.length > 0 && tasksRes.tasks && tasksRes.tasks.length === 0) {
+        setOfflineTasks(local);
+        setShowImportModal(true);
+      }
+    } catch (err) {
+      console.warn('Failed to fetch remote tasks, falling back to local cache:', err);
+      setTasks(loadTasksFromStorage());
+    }
+  };
+
+  // Sync tasks to backend and local storage
+  const syncTimerRef = useRef<NodeJS.Timeout | null>(null);
+  useEffect(() => {
+    if (!currentUser) return;
+    saveTasksToStorage(tasks);
+
+    // Debounced sync to backend
+    if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
+    syncTimerRef.current = setTimeout(() => {
+      tasksApi.syncTasks(tasks).catch((e) => console.warn('Background sync error:', e));
+    }, 800);
+
+    return () => {
+      if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
+    };
+  }, [tasks, currentUser]);
+
+  // Sync settings to backend and local storage
   useEffect(() => {
     saveSettingsToStorage(settings);
-  }, [settings]);
+    if (currentUser) {
+      settingsApi.saveSettings(settings).catch((e) => console.warn('Settings sync error:', e));
+    }
+  }, [settings, currentUser]);
+
+  // Handle successful login or registration
+  const handleAuthSuccess = async (user: UserProfile) => {
+    setCurrentUser(user);
+    await loadUserRemoteData(user);
+
+    // Check if offline local tasks are present to offer import
+    const local = loadTasksFromStorage();
+    if (local && local.length > 0) {
+      setOfflineTasks(local);
+      setShowImportModal(true);
+    }
+  };
+
+  // Handle Logout
+  const handleLogout = async () => {
+    try {
+      await authApi.logout();
+    } catch (e) {
+      console.warn('Logout request failed:', e);
+    }
+    // Clear private cached state
+    setCurrentUser(null);
+    setTasks([]);
+    clearAllLocalData();
+  };
+
+  // Handle Logout from all devices
+  const handleLogoutAll = async () => {
+    try {
+      await authApi.logoutAll();
+    } catch (e) {
+      console.warn('Logout all request failed:', e);
+    }
+    setCurrentUser(null);
+    setTasks([]);
+    clearAllLocalData();
+  };
+
+  // Confirm Import of Local Tasks
+  const handleConfirmImportLocal = async () => {
+    try {
+      const res = await tasksApi.importLocalTasks(offlineTasks);
+      setTasks(res.tasks);
+      saveTasksToStorage(res.tasks);
+      setShowImportModal(false);
+      setOfflineTasks([]);
+    } catch (e) {
+      console.error('Import failed:', e);
+      setShowImportModal(false);
+    }
+  };
+
+  // Resend verification email
+  const handleResendVerification = async () => {
+    setResendLoading(true);
+    setResendStatus(null);
+    try {
+      const res = await authApi.resendVerification();
+      setResendStatus(res.message);
+    } catch (e: unknown) {
+      setResendStatus(e instanceof Error ? e.message : 'Could not send verification email.');
+    } finally {
+      setResendLoading(false);
+    }
+  };
 
   // Handle Snooze (only alters alert time, NEVER the actual deadline)
   const handleQuickSnooze = useCallback(
@@ -88,7 +242,6 @@ export default function App() {
         })
       );
 
-      // If detail modal is open for this task, update it as well
       setDetailTask((prev) => {
         if (prev && prev.id === task.id) {
           return {
@@ -139,7 +292,6 @@ export default function App() {
           const nextDeadline = calculateNextOccurrence(task.deadline, task.repeat);
 
           if (nextDeadline) {
-            // Create next occurrence for upcoming schedule
             const nextOccurrenceTask: TaskReminder = {
               ...task,
               id: `task-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
@@ -147,7 +299,6 @@ export default function App() {
               completed: false,
               completedAt: undefined,
               snoozedUntil: undefined,
-              // reset checklist for next cycle
               checklist: task.checklist.map((item) => ({ ...item, completed: false })),
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
@@ -157,12 +308,11 @@ export default function App() {
               ],
             };
 
-            // Mark current as completed to preserve history
             const completedCurrent: TaskReminder = {
               ...task,
               completed: true,
               completedAt: new Date().toISOString(),
-              snoozedUntil: undefined, // cancel pending snooze
+              snoozedUntil: undefined,
               updatedAt: new Date().toISOString(),
             };
 
@@ -176,7 +326,6 @@ export default function App() {
           }
         }
 
-        // Non-repeating completion
         setTasks((prev) =>
           prev.map((t) =>
             t.id === task.id
@@ -184,14 +333,13 @@ export default function App() {
                   ...t,
                   completed: true,
                   completedAt: new Date().toISOString(),
-                  snoozedUntil: undefined, // cancel reminder
+                  snoozedUntil: undefined,
                   updatedAt: new Date().toISOString(),
                 }
               : t
           )
         );
       } else {
-        // Reopen completed task
         setTasks((prev) =>
           prev.map((t) =>
             t.id === task.id
@@ -206,7 +354,6 @@ export default function App() {
         );
       }
 
-      // Update detail view if open
       setDetailTask((prev) =>
         prev && prev.id === task.id
           ? {
@@ -226,7 +373,6 @@ export default function App() {
     taskData: Omit<TaskReminder, 'id' | 'createdAt' | 'updatedAt'>
   ) => {
     if (editingTask) {
-      // Editing existing task
       setTasks((prev) =>
         prev.map((t) =>
           t.id === editingTask.id
@@ -240,7 +386,6 @@ export default function App() {
       );
       setEditingTask(null);
     } else {
-      // Creating new task
       const newTask: TaskReminder = {
         ...taskData,
         id: `task-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
@@ -261,7 +406,7 @@ export default function App() {
     setTaskToDelete(null);
   };
 
-  // Update task details (e.g. from modal checklist interaction)
+  // Update task details (from checklist)
   const handleUpdateTask = (updatedTask: TaskReminder) => {
     setTasks((prev) => prev.map((t) => (t.id === updatedTask.id ? updatedTask : t)));
     setDetailTask(updatedTask);
@@ -291,6 +436,32 @@ export default function App() {
   ).length;
   const completedCount = tasks.filter((t) => t.completed).length;
 
+  // Initial Auth Loading Screen
+  if (authChecking) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
+        <div className="text-center space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-violet-600 to-sky-500 text-white flex items-center justify-center mx-auto text-2xl shadow-lg shadow-violet-500/20 animate-pulse">
+            🎯
+          </div>
+          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+            Checking Soonzo security credentials...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // If not signed in: Protected route redirects to AuthView
+  if (!currentUser) {
+    return (
+      <div className="relative min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
+        <EmojiBackground enabled={settings.showEmojiBackground} />
+        <AuthView onSuccess={handleAuthSuccess} />
+      </div>
+    );
+  }
+
   return (
     <div className="relative min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
       {/* Background emojis (customizable in settings) */}
@@ -305,6 +476,43 @@ export default function App() {
         onSnooze={handleSnoozeById}
       />
 
+      {/* Offline Tasks Import Modal */}
+      <ImportOfflineTasksModal
+        isOpen={showImportModal}
+        localTasksCount={offlineTasks.length}
+        onConfirmImport={handleConfirmImportLocal}
+        onDismiss={() => {
+          setShowImportModal(false);
+          setOfflineTasks([]);
+        }}
+      />
+
+      {/* Verification Notice Banner if email is not yet verified */}
+      {!currentUser.emailVerified && (
+        <div className="bg-amber-500 text-slate-900 px-4 py-2 text-xs font-medium flex items-center justify-between gap-3 shadow-xs relative z-40">
+          <div className="flex items-center gap-2 max-w-2xl truncate">
+            <AlertTriangle className="w-4 h-4 shrink-0 text-amber-950" />
+            <span>
+              Please verify your email (<strong>{currentUser.email}</strong>) to secure your account.
+            </span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {resendStatus ? (
+              <span className="font-semibold text-amber-950">{resendStatus}</span>
+            ) : (
+              <button
+                onClick={handleResendVerification}
+                disabled={resendLoading}
+                className="px-2.5 py-1 bg-amber-950 hover:bg-black text-amber-200 rounded-lg text-[11px] font-semibold transition-colors flex items-center gap-1"
+              >
+                {resendLoading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Mail className="w-3 h-3" />}
+                <span>Resend Email</span>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="relative z-10 flex min-h-screen">
         {/* Navigation Sidebar / Mobile Nav */}
         <Navigation
@@ -317,6 +525,8 @@ export default function App() {
           pendingCount={pendingCount}
           overdueCount={overdueCount}
           completedCount={completedCount}
+          currentUser={currentUser}
+          onLogout={handleLogout}
         />
 
         {/* Main Content Viewport */}
@@ -386,6 +596,10 @@ export default function App() {
               permissionState={permissionState}
               tasks={tasks}
               onImportTasks={(imported) => setTasks(imported)}
+              currentUser={currentUser}
+              onLogout={handleLogout}
+              onLogoutAll={handleLogoutAll}
+              onProfileUpdated={(updated) => setCurrentUser(updated)}
             />
           )}
         </main>
