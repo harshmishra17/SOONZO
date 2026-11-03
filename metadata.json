@@ -1,0 +1,6 @@
+{
+  "name": "Soonzo 🎯",
+  "description": "Soonzo - Smart student reminder app for tracking hackathons, submissions, exams, and personal tasks.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
